@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Center approval pending | setux{% endblock %}
+{% block content %}
+<section class="form-panel approval-panel">
+    {% if hospital.approval_status == "rejected" %}
+        <p class="eyebrow">Registration not approved</p>
+        <h1>{{ hospital.name }} was not approved.</h1>
+        <p class="lede">Center tools remain unavailable. Please contact a SetuX administrator if you need more information.</p>
+    {% else %}
+        <p class="eyebrow">Approval pending</p>
+        <h1>{{ hospital.name }} is being verified.</h1>
+        <p class="lede">Your account is registered, but inventory and donor-matching tools remain locked until a SetuX administrator verifies and activates the facility.</p>
+        <p class="muted">Once approved, sign in here again to open the healthcare-center dashboard.</p>
+    {% endif %}
+</section>
+{% endblock %}

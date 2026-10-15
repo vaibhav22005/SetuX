@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Registration submitted | setux{% endblock %}
+{% block content %}
+<section class="form-panel approval-panel">
+    <p class="eyebrow">Registration received</p>
+    <h1>Your center is in review.</h1>
+    <p class="lede">A SetuX administrator must verify the facility registration and activate your center account. You can sign in to check approval status.</p>
+    <a class="button" href="{% url 'hospital_login' %}">Go to center login <span aria-hidden="true">↗</span></a>
+</section>
+{% endblock %}

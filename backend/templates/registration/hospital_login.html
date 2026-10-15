@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Healthcare center login | setux{% endblock %}
+{% block content %}
+<section class="form-panel">
+    <p class="eyebrow">Healthcare center access</p>
+    <h1>Welcome back.</h1>
+    <p class="lede">Sign in to update stock and coordinate local donor response.</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="button" type="submit">Sign in to center</button>
+    </form>
+    <p class="auth-switch">New to SetuX? <a href="{% url 'hospital_register' %}">Register your healthcare center</a></p>
+</section>
+{% endblock %}

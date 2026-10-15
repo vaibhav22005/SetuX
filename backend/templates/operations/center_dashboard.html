@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}{{ hospital.name }} | setux{% endblock %}
+{% block content %}
+<section class="operations-heading center-heading">
+    <div><p class="eyebrow">Healthcare center</p><h1>{{ hospital.name }}</h1><p class="lede">{{ staff_profile.job_title|default:"Center operations" }} · {{ hospital.city }}</p></div>
+    <div class="center-status"><span class="status-dot"></span> Center active</div>
+</section>
+<section class="center-grid">
+    <div class="stock-entry-panel">
+        <p class="eyebrow">Record stock</p>
+        <h2>Update today’s inventory.</h2>
+        <p class="muted">Each update is timestamped and stays linked to your healthcare center.</p>
+        <form method="post" class="stock-form">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="inventory">
+            {{ inventory_form.as_p }}
+            <button class="button" type="submit">Save inventory update <span aria-hidden="true">↗</span></button>
+        </form>
+    </div>
+    <div class="center-summary">
+        <p class="eyebrow">Attention queue</p>
+        <strong>{{ open_shortage_count }}</strong>
+        <h2>open shortage requests</h2>
+        <p class="muted">Requests that are still awaiting donor support.</p>
+    </div>
+</section>
+<section class="shortage-panel">
+    <div><p class="eyebrow">Need local donors?</p><h2>Open a shortage request.</h2><p class="muted">Set the blood group, quantity, and practical radius. SetuX will return eligible nearby donors.</p></div>
+    <form method="post" action="{% url 'inventory:create_shortage' %}" class="shortage-form">
+        {% csrf_token %}
+        <input type="hidden" name="form_type" value="shortage">
+        {{ shortage_form.as_p }}
+        <button class="button" type="submit">Find nearby donors <span aria-hidden="true">↗</span></button>
+    </form>
+</section>
+<section class="shortage-panel">
+    <div>
+        <p class="eyebrow">Donation verification</p>
+        <h2>Confirm a completed donation.</h2>
+        <p class="muted">Use the donor's exact username. Verification updates their donation history and issues the selected active wellness reward.</p>
+    </div>
+    <form method="post" class="shortage-form">
+        {% csrf_token %}
+        <input type="hidden" name="form_type" value="donation">
+        {{ donation_form.as_p }}
+        <button class="button" type="submit">Verify donation</button>
+    </form>
+</section>
+<section class="operations-table-section"><div class="section-heading"><div><p class="eyebrow">Open requests</p><h2>Active needs</h2></div></div><div class="data-table"><div class="data-row data-header"><span>Group</span><span>Units</span><span>Radius</span><span>Status</span></div>{% for item in open_shortages %}<a class="data-row data-link" href="{% url 'inventory:shortage_detail' request_id=item.pk %}"><span class="blood-label">{{ item.blood_group }}</span><span>{{ item.units_needed }}</span><span>{{ item.radius_km }} km</span><span>{{ item.status }}</span></a>{% empty %}<div class="empty-row">No active shortage requests for this center.</div>{% endfor %}</div></section>
+<section class="operations-table-section">
+    <div class="section-heading">
+        <div><p class="eyebrow">Donor responses</p><h2>Accepted donor requests</h2></div>
+    </div>
+    <div class="data-table">
+        <div class="data-row data-header"><span>Donor</span><span>Request</span><span>Accepted</span><span>Proposed time</span></div>
+        {% for response in accepted_responses %}
+            <a class="data-row data-link" href="{% url 'inventory:shortage_detail' request_id=response.shortage_id %}">
+                <span>
+                    <strong>{{ response.donor.user.get_full_name|default:response.donor.user.username }}</strong>
+                    <small>{{ response.donor.phone_number|default:"No phone provided" }}</small>
+                </span>
+                <span><span class="blood-label">{{ response.shortage.blood_group }}</span><small>{{ response.shortage.units_needed }} unit{{ response.shortage.units_needed|pluralize }}</small></span>
+                <span>{{ response.accepted_at|date:"d M Y, H:i" }}</span>
+                <span>{% if response.donation_slot %}{{ response.donation_slot|date:"d M Y, H:i" }}{% else %}Not proposed{% endif %}</span>
+            </a>
+        {% empty %}
+            <div class="empty-row">No donors have accepted requests for this center yet.</div>
+        {% endfor %}
+    </div>
+</section>
+<section class="operations-table-section">
+    <div class="section-heading"><div><p class="eyebrow">Forecast · next 7 days</p><h2>Inventory outlook</h2></div></div>
+    <div class="data-table">
+        <div class="data-row data-header"><span>Group</span><span>Risk</span><span>Current</span><span>Forecast</span></div>
+        {% for item in forecast_risks %}
+            <div class="data-row">
+                <span class="blood-label">{{ item.blood_group }}</span>
+                <span>{{ item.risk_level|title }}</span>
+                <span>{% if item.risk_level == "missing_data" %}—{% else %}{{ item.current_units }} units{% endif %}</span>
+                <span>{% if item.forecast %}{{ item.forecast.0.predicted_units }} units{% else %}No history{% endif %}</span>
+            </div>
+        {% empty %}
+            <div class="empty-row">No inventory outlook is available yet.</div>
+        {% endfor %}
+    </div>
+</section>
+<section class="operations-table-section center-log">
+    <div class="section-heading"><div><p class="eyebrow">Center record</p><h2>Recent inventory</h2></div></div>
+    <div class="data-table">
+        <div class="data-row data-header"><span>Group</span><span>Units available</span><span>Safe threshold</span><span>Recorded</span></div>
+        {% for item in inventory_logs %}<div class="data-row"><span class="blood-label">{{ item.blood_group }}</span><span>{{ item.units_available }}</span><span>{{ item.safe_threshold }}</span><span>{{ item.recorded_at|date:"d M Y, H:i" }}</span></div>{% empty %}<div class="empty-row">No records for this center yet.</div>{% endfor %}
+    </div>
+</section>
+{% endblock %}

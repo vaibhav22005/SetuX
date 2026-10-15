@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Operations | setux{% endblock %}
+{% block content %}
+<section class="operations-heading">
+    <div>
+        <p class="eyebrow">SetuX operations</p>
+        <h1>See the network clearly.</h1>
+        <p class="lede">A central view for the people keeping hospitals, stock, and donor response coordinated.</p>
+    </div>
+    <a class="button" href="{% url 'admin:index' %}">Open admin console <span aria-hidden="true">↗</span></a>
+</section>
+<section class="metric-grid" aria-label="Operations overview">
+    <div class="metric-card"><span>Active centers</span><strong>{{ hospital_count }}</strong><small>Registered hospitals</small></div>
+    <a class="metric-card" href="{% url 'admin:inventory_hospital_changelist' %}?approval_status__exact=pending"><span>Center registrations</span><strong>{{ pending_hospital_count }}</strong><small>Pending verification · Review in admin</small></a>
+    <div class="metric-card metric-alert"><span>Needs attention</span><strong>{{ low_stock_count }}</strong><small>Inventory logs at or below threshold</small></div>
+    <div class="metric-card"><span>Center staff</span><strong>{{ staff_count }}</strong><small>Active assigned accounts</small></div>
+</section>
+<section class="operations-table-section"><div class="section-heading"><div><p class="eyebrow">Response queue</p><h2>Open shortage requests</h2></div></div><div class="data-table"><div class="data-row data-header"><span>Center</span><span>Group</span><span>Units</span><span>Radius</span></div>{% for item in open_shortages %}<a class="data-row data-link" href="{% url 'inventory:shortage_detail' request_id=item.pk %}"><span>{{ item.hospital.name }}</span><span class="blood-label">{{ item.blood_group }}</span><span>{{ item.units_needed }}</span><span>{{ item.radius_km }} km</span></a>{% empty %}<div class="empty-row">No open shortage requests.</div>{% endfor %}</div></section>
+<section class="operations-table-section">
+    <div class="section-heading"><div><p class="eyebrow">Forecast · next 7 days</p><h2>Inventory risks</h2></div></div>
+    <div class="data-table">
+        <div class="data-row data-header"><span>Center</span><span>Group</span><span>Risk</span><span>Forecast</span></div>
+        {% for item in forecast_risks %}
+            <div class="data-row">
+                <span>{{ item.hospital_name }}</span>
+                <span class="blood-label">{{ item.blood_group }}</span>
+                <span>{{ item.risk_level|title }}</span>
+                <span>{{ item.next_prediction.predicted_units }} units</span>
+            </div>
+        {% empty %}
+            <div class="empty-row">No high- or watch-risk forecasts from the available inventory history.</div>
+        {% endfor %}
+    </div>
+</section>
+<section class="operations-table-section">
+    <div class="section-heading"><div><p class="eyebrow">Latest activity</p><h2>Inventory updates</h2></div><span class="table-note">Newest first</span></div>
+    <div class="data-table">
+        <div class="data-row data-header"><span>Center</span><span>Group</span><span>Units</span><span>Recorded</span></div>
+        {% for item in recent_inventory %}
+            <div class="data-row"><span>{{ item.hospital.name }}</span><span class="blood-label">{{ item.blood_group }}</span><span>{{ item.units_available }}</span><span>{{ item.recorded_at|date:"d M Y, H:i" }}</span></div>
+        {% empty %}
+            <div class="empty-row">No inventory updates yet. Center staff can record the first one from their dashboard.</div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
