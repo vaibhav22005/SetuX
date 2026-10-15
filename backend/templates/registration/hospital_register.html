@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Register healthcare center | setux{% endblock %}
+{% block content %}
+<section class="form-panel hospital-register-panel">
+    <p class="eyebrow">Healthcare center registration</p>
+    <h1>Bring your center onto the network.</h1>
+    <p class="lede">Submit your facility and account details. A SetuX administrator will verify the registration before center tools are activated.</p>
+    <p class="muted">Use your device location to fill in the center’s coordinates automatically. Your browser will ask for permission.</p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="location-capture">
+            <button class="button button-small" type="button" data-capture-location>Use my current location</button>
+            <span class="location-status" data-location-status role="status" aria-live="polite"></span>
+        </div>
+        {{ form.as_p }}
+        <button class="button" type="submit">Submit for review <span aria-hidden="true">↗</span></button>
+    </form>
+    <p class="auth-switch">Already registered? <a href="{% url 'hospital_login' %}">Center login</a></p>
+</section>
+<script src="{% static 'js/location.js' %}" defer></script>
+{% endblock %}

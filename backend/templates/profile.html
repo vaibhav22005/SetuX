@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Your profile | setux{% endblock %}
+{% block content %}
+<section class="form-panel profile-form-panel">
+    <p class="eyebrow">Donor profile</p>
+    <h1>Keep your details current.</h1>
+    <p class="lede">Your location is used only to find practical nearby matches when a center needs your blood group. Share your device location to fill in your coordinates automatically.</p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="location-capture">
+            <button class="button button-small" type="button" data-capture-location>Use my current location</button>
+            <span class="location-status" data-location-status role="status" aria-live="polite"></span>
+        </div>
+        {{ form.as_p }}
+        <button class="button" type="submit">Save profile <span aria-hidden="true">↗</span></button>
+    </form>
+</section>
+<script src="{% static 'js/location.js' %}" defer></script>
+{% endblock %}

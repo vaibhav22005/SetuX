@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Dashboard | setux{% endblock %}
+{% block content %}
+<section class="dashboard">
+    <div class="dashboard-heading">
+        <div>
+            <p class="eyebrow">Donor dashboard</p>
+            <h1>Good to have you, {{ user.first_name|default:user.username }}.</h1>
+        </div>
+        <span class="availability-pill"><span class="status-dot"></span> Available to help</span>
+    </div>
+    <div class="dashboard-grid">
+        <div class="profile-panel">
+            <div class="panel-label">Your donor profile</div>
+            <div class="blood-badge">{{ profile.blood_group }}</div>
+            <h2>{{ profile.blood_group }} donor</h2>
+            <p class="muted">{{ profile.city|default:"Add your city to improve local matching." }}</p>
+            <div class="profile-details">
+                <span>Availability</span><strong>{% if profile.is_available %}Open to alerts{% else %}Paused{% endif %}</strong>
+                <span>Last donation</span><strong>{{ profile.last_donation_date|default:"Not recorded" }}</strong>
+            </div>
+        </div>
+        <div class="next-panel">
+            <div class="panel-label">Your next step</div>
+            <h2>Keep your profile ready.</h2>
+            <p class="muted">Location details help hospitals find eligible donors within a practical distance.</p>
+            <a class="text-link" href="{% url 'donors:profile' %}">Update profile and location <span aria-hidden="true">→</span></a>
+        </div>
+    </div>
+    {% if firebase_web_enabled %}
+        {{ firebase_push_config|json_script:"firebase-push-config" }}
+        <section class="next-panel">
+            <div class="panel-label">Push notifications</div>
+            <h2>Get alerts when you’re away.</h2>
+            <p class="muted">Allow browser notifications to receive matching shortage and inventory-risk alerts.</p>
+            <button class="button" id="enable-push-notifications" type="button">
+                {% if registered_device_count %}Enable on this browser{% else %}Enable push alerts{% endif %}
+            </button>
+            <button class="text-link" id="disable-push-notifications" type="button">Disable push on this browser</button>
+            <p class="muted" id="push-notification-status" role="status" aria-live="polite"></p>
+        </section>
+        <script type="module" src="{% static 'js/firebase_notifications.js' %}"></script>
+    {% endif %}
+    <section class="operations-table-section">
+        <div class="section-heading">
+            <div><p class="eyebrow">Nearby centers</p><h2>Open shortage requests</h2></div>
+        </div>
+        <div class="data-table">
+            <div class="data-row data-header shortage-donor-row"><span>Center and location</span><span>Blood group</span><span>Units needed</span><span>Radius</span><span>Your response</span></div>
+            {% for shortage in nearby_shortages %}
+                <div class="data-row shortage-donor-row">
+                    <span>
+                        <strong>{{ shortage.hospital.name }}</strong>
+                        <small>{{ shortage.hospital.address }}, {{ shortage.hospital.city }}</small>
+                        {% if shortage.hospital.latitude and shortage.hospital.longitude %}
+                            <button
+                                class="text-link map-directions-button"
+                                type="button"
+                                data-hospital-directions
+                                data-hospital-latitude="{{ shortage.hospital.latitude }}"
+                                data-hospital-longitude="{{ shortage.hospital.longitude }}"
+                            >View map and route</button>
+                            <small data-directions-status role="status" aria-live="polite"></small>
+                        {% endif %}
+                    </span>
+                    <span class="blood-label">{{ shortage.blood_group }}</span>
+                    <span>{{ shortage.units_needed }}</span>
+                    <span>{{ shortage.radius_km }} km</span>
+                    <span>
+                        <form method="post" action="{% url 'donors:accept_shortage' request_id=shortage.pk %}" class="shortage-response-form">
+                            {% csrf_token %}
+                            {{ shortage.response_form.as_p }}
+                            <button class="button button-small" type="submit">Accept request</button>
+                        </form>
+                    </span>
+                </div>
+            {% empty %}
+                <div class="empty-row">No open shortage requests currently match your blood group, availability, and saved location.</div>
+            {% endfor %}
+        </div>
+    </section>
+    <section class="operations-table-section">
+        <div class="section-heading">
+            <div><p class="eyebrow">Your commitments</p><h2>Accepted requests</h2></div>
+        </div>
+        <div class="data-table">
+            <div class="data-row data-header shortage-donor-row"><span>Center and location</span><span>Blood group</span><span>Units needed</span><span>Radius</span><span>Response</span></div>
+            {% for response in accepted_responses %}
+                <div class="data-row shortage-donor-row">
+                    <span>
+                        <strong>{{ response.shortage.hospital.name }}</strong>
+                        <small>{{ response.shortage.hospital.address }}, {{ response.shortage.hospital.city }}</small>
+                        {% if response.shortage.hospital.latitude and response.shortage.hospital.longitude %}
+                            <button
+                                class="text-link map-directions-button"
+                                type="button"
+                                data-hospital-directions
+                                data-hospital-latitude="{{ response.shortage.hospital.latitude }}"
+                                data-hospital-longitude="{{ response.shortage.hospital.longitude }}"
+                            >View map and route</button>
+                            <small data-directions-status role="status" aria-live="polite"></small>
+                        {% endif %}
+                    </span>
+                    <span class="blood-label">{{ response.shortage.blood_group }}</span>
+                    <span>{{ response.shortage.units_needed }}</span>
+                    <span>{{ response.shortage.radius_km }} km</span>
+                    <span>
+                        <strong>Accepted</strong>
+                        <small>{{ response.accepted_at|date:"d M Y, H:i" }}</small>
+                        {% if response.donation_slot %}
+                            <small>Proposed: {{ response.donation_slot|date:"d M Y, H:i" }}</small>
+                        {% else %}
+                            <small>No time proposed.</small>
+                        {% endif %}
+                        {% if response.shortage.status == "closed" %}
+                            <small>Request closed</small>
+                        {% endif %}
+                    </span>
+                </div>
+            {% empty %}
+                <div class="empty-row">You have not accepted any shortage requests.</div>
+            {% endfor %}
+        </div>
+    </section>
+    <section class="operations-table-section">
+        <div class="section-heading">
+            <div><p class="eyebrow">In-app updates</p><h2>Your alerts</h2></div>
+            {% if alerts %}<form method="post" action="{% url 'donors:mark_alerts_read' %}">{% csrf_token %}<button class="text-link" type="submit">Mark all read</button></form>{% endif %}
+        </div>
+        <div class="data-table">
+            {% for alert in alerts %}
+                <div class="data-row">
+                    <span>{{ alert.get_category_display }}</span>
+                    <span>{{ alert.message }}</span>
+                    <span>{% if alert.read_at %}Read{% else %}New{% endif %}</span>
+                    <span>{{ alert.created_at|date:"d M Y, H:i" }}</span>
+                </div>
+            {% empty %}
+                <div class="empty-row">You have no alerts yet.</div>
+            {% endfor %}
+        </div>
+    </section>
+    <section class="operations-table-section">
+        <div class="section-heading"><div><p class="eyebrow">Wellness rewards</p><h2>Your rewards</h2></div></div>
+        <div class="data-table">
+            {% for claim in reward_claims %}
+                <div class="data-row">
+                    <span>{{ claim.reward.title }}</span>
+                    <span>{{ claim.reward.get_reward_type_display }}</span>
+                    <span>{{ claim.reward.provider_name|default:"Provider details available at the center" }}</span>
+                    <span>
+                        {% if claim.claimed_at %}
+                            Claim code: {{ claim.claim_code }}
+                        {% else %}
+                            <form method="post" action="{% url 'donors:claim_reward' claim_id=claim.pk %}">
+                                {% csrf_token %}
+                                <button class="text-link" type="submit">Claim reward</button>
+                            </form>
+                        {% endif %}
+                    </span>
+                </div>
+            {% empty %}
+                <div class="empty-row">Verified wellness rewards will appear here.</div>
+            {% endfor %}
+        </div>
+    </section>
+</section>
+<script src="{% static 'js/hospital_directions.js' %}" defer></script>
+{% endblock %}

@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block title %}Access restricted | setux{% endblock %}
+{% block content %}
+<section class="form-panel"><p class="eyebrow">Access restricted</p><h1>This center is outside your assignment.</h1><p class="lede">Your account can only access records for its assigned healthcare center.</p><a class="button" href="{% url 'inventory:control_room' %}">Back to operations</a></section>
+{% endblock %}

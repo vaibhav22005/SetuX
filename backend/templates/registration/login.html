@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Log in | setux{% endblock %}
+{% block content %}
+<section class="form-panel">
+    <p class="eyebrow">Donor access</p>
+    <h1>Welcome back</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="button" type="submit">Log in</button>
+    </form>
+    <p class="auth-switch">Healthcare center? <a href="{% url 'hospital_login' %}">Use center login</a></p>
+</section>
+{% endblock %}

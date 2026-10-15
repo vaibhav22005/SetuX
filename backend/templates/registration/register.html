@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Become a donor | setux{% endblock %}
+{% block content %}
+<section class="form-panel">
+    <p class="eyebrow">Donor registration</p>
+    <h1>Join the local donor network</h1>
+    <p class="muted">You can share your device location to fill in your coordinates automatically. Your browser will ask for permission.</p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="location-capture">
+            <button class="button button-small" type="button" data-capture-location>Use my current location</button>
+            <span class="location-status" data-location-status role="status" aria-live="polite"></span>
+        </div>
+        {{ form.as_p }}
+        <button class="button" type="submit">Create donor account</button>
+    </form>
+</section>
+<script src="{% static 'js/location.js' %}" defer></script>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Shortage request | setux{% endblock %}
+{% block content %}
+<section class="operations-heading">
+    <div><p class="eyebrow">Shortage request · {{ shortage.status }}</p><h1>{{ shortage.blood_group }} needed nearby.</h1><p class="lede">{{ shortage.hospital.name }} is looking for {{ shortage.units_needed }} unit{{ shortage.units_needed|pluralize }} within {{ shortage.radius_km }} km.</p><p class="muted">{{ shortage.hospital.address }}, {{ shortage.hospital.city }}</p></div>
+    <a class="text-link" href="{% url 'inventory:center_dashboard' %}">← Back to center</a>
+</section>
+<section class="match-summary"><div><span class="eyebrow">Eligible matches</span><strong>{{ match_count }}</strong><p class="muted">Available {{ shortage.blood_group }} donors within the requested radius.</p></div><div class="request-meta"><span>Requested {{ shortage.created_at|date:"d M Y, H:i" }}</span><span>Radius {{ shortage.radius_km }} km</span></div></section>
+<section class="operations-table-section"><div class="section-heading"><div><p class="eyebrow">Response list</p><h2>Nearby donors</h2></div></div><div class="data-table"><div class="data-row data-header"><span>Donor</span><span>City</span><span>Distance</span><span>Contact</span></div>{% for donor in matches %}<div class="data-row"><span>{{ donor.user.get_full_name|default:donor.user.username }}</span><span>{{ donor.city|default:"Not provided" }}</span><span>{{ donor.distance_m|floatformat:0 }} m</span><span>{{ donor.phone_number|default:"Not provided" }}</span></div>{% empty %}<div class="empty-row">No eligible donors are currently available in this radius.</div>{% endfor %}</div></section>
+<section class="operations-table-section">
+    <div class="section-heading">
+        <div><p class="eyebrow">Donor responses</p><h2>Accepted requests and proposed times</h2></div>
+    </div>
+    <div class="data-table">
+        <div class="data-row data-header"><span>Donor</span><span>Blood group</span><span>Accepted</span><span>Proposed donation time</span></div>
+        {% for response in responses %}
+            <div class="data-row">
+                <span>{{ response.donor.user.get_full_name|default:response.donor.user.username }}</span>
+                <span class="blood-label">{{ response.donor.blood_group }}</span>
+                <span>{{ response.accepted_at|date:"d M Y, H:i" }}</span>
+                <span>{% if response.donation_slot %}{{ response.donation_slot|date:"d M Y, H:i" }}{% else %}No time proposed yet{% endif %}</span>
+            </div>
+        {% empty %}
+            <div class="empty-row">No donors have accepted this request yet.</div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
